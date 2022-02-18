@@ -34,7 +34,7 @@
 \author{%
   \textsc{Ryuji Ishiguro}\\%
 }
-\date{{\small -- Very Preliminary (ver 0.2) --}}
+\date{{\small -- Very Preliminary (ver 0.3) --}}
 
 \begin{document}
 \maketitle
@@ -262,22 +262,18 @@ With this relation, we have:
 \[
 \begin{split}
 (u, e_i, e_i') \in L_{\mathcal{R}} \Longleftrightarrow & \; \prod_i e_i / \prod_i e_i' = \prod_i u^{\beta_i} u^{-\beta_i'} = \prod_i u^{\beta_{\triangle
-      i}}, \\ & \text{where } \beta_{\triangle i} = \beta_i -
-  \beta_i',
+      i}}, \\ & \text{where } \beta_{\triangle i} = \beta_i - \beta_i',
 \end{split}
 \]
 if and only if $\sum_i bl_i = \sum_i bl_i'$. Therefore all we need to
 do is to run a sigma protocol to prove that each party has
 $\beta_{\triangle i}$, i.e.,
 \[
-\mathcal{R}' := \{ ((\beta_{\triangle i}, bl_i', \gamma_i), (u, w_i,
-b_{ij}, c_{ij})) : w_i = u^{\beta_{\triangle i}}, c_{ij} =
-u^{\gamma_i} g^{b_{ij}} \}
+\mathcal{R}' := \{ ((\beta_{\triangle i}, bl_i', \gamma_i), (u, w_i, b_{ij}, c_{ij})) : w_i = u^{\beta_{\triangle i}}, c_{ij} = u^{\gamma_i} g^{b_{ij}} \}
 \]
 that satisfies:
 \[
-(\prod_i e_i / \prod_i e_i' = \prod_i w_i) \wedge (bl_i' = \sum_{j =
-  0..d-1} 2^{j} b_{ij}).
+(\prod_i e_i / \prod_i e_i' = \prod_i w_i) \wedge (bl_i' = \sum_{j = 0..d-1} 2^{j} b_{ij}).
 \]
 The Sigma protocol of PoB will look like the Figure \ref{PoB}.
 
@@ -286,12 +282,11 @@ The Sigma protocol of PoB will look like the Figure \ref{PoB}.
   \begin{tikzpicture}
     \matrix (m) [matrix of math nodes, nodes in empty cells, row
       sep=0cm, column sep=3cm, minimum width=4cm] {
-      P((\beta_{\triangle i}, bl_i', \gamma_i, \beta_i', b_{ij}), (u, c_{ij}, w_i)) & V(u, c_{ij}, w_i) \\
+      P((\beta_{\triangle i}, bl_i', \gamma_i, \beta_i', \{b_{ij}\}), (u, \{c_{ij}\}, w_i)) & V(u, \{c_{ij}\}, w_i) \\
       \begin{minipage} {5cm} \begin{multline*}
-          t_{1j}, t_2, t_{3j}, t_4, t_5 \xleftarrow{\mathcal{R}}
-          \mathbb{Z}_q \\ v_{1ij} = c_{ij}^{t_{1j}}, \; v_{2i} =
-          u^{t_2}, \; v_{3ij} = u^{-t_3j}, \\
-          v_{4i} = u^{t_4}, \; v_{5i} = u^{t_5} \\
+          t_{1j}, t_2, t_{3j}, t_4, t_5 \xleftarrow{\mathcal{R}} \mathbb{Z}_q \\
+          v_{1ij} = c_{ij}^{t_{1j}}, \; v_{2i} = u^{t_2}, \; v_{3ij} = u^{-t_3j}, \\
+          v_{4i} = u^{t_4}, \; v_{5i} = u^{t_5}, v_{1i*} = \prod_j g^{t_{1j}} 2^j \\
       \end{multline*} \end{minipage}  & \\
                       & \\
                       & C \xleftarrow{\mathcal{R}} \mathbb{Z}_q \\
@@ -304,15 +299,15 @@ The Sigma protocol of PoB will look like the Figure \ref{PoB}.
                       & \\
                       & \begin{minipage}{5cm} \begin{multline*}
                             c_{ij}^{z_{1ij}} u^{z_{2i}} u^{-z_{3ij}} \overset{?}{=} v_{1ij} v_{2i} v_{3ij} c_{ij}^C \\
-                            (\prod_j g^{z_{1ij} 2^j}) u^{z_{4i}} \overset{?}{=} (\prod_j v_{1ij}^{2^j}) v_{4i} e_i^{'C} \\
+                            (\prod_j g^{z_{1ij} 2^j}) u^{z_{4i}} \overset{?}{=} v_{1i*} v_{4i} e_i^{'C} \\
                             u^{z_{5i}} \overset{?}{=} v_{5i} w_i^C \\
                         \end{multline*} \end{minipage} \\
     };
 
     \draw [-, transform canvas={yshift=0.5cm}] (m-1-1.west) -- (m-1-2.east) node [very near start, above] {};
-    \draw [->] (m-3-1) -- (m-3-2) node [midway, above] {$v_{1ij}, v_{2i}, v_{3ij}, v_{4i}, v_{5i}$};
+    \draw [->] (m-3-1) -- (m-3-2) node [midway, above] {$\{v_{1ij}\}, v_{2i}, \{v_{3ij}\}, v_{4i}, v_{5i}, v_{1i*}$};
     \draw [<-] (m-5-1) -- (m-5-2) node [midway, above] {$C$};
-    \draw [->] (m-7-1) -- (m-7-2) node [midway, above] {$z_{1ij}, z_{2i}, z_{3ij}, z_{4i}, z_{5i}$};
+    \draw [->] (m-7-1) -- (m-7-2) node [midway, above] {$\{z_{1ij}\}, z_{2i}, \{z_{3ij}\}, z_{4i}, z_{5i}$};
   \end{tikzpicture}
 \caption{Sigma Protocol for PoB}
 \label{PoB}
@@ -506,13 +501,14 @@ This is a payment scheme, not a cryptocurrency. There is no mining that makes mo
   \draw (0, 0.7) node {\textbf{Balance 0}};
   \node[draw] (A) at (0,0) {$ebl_0$ with 0 balance};
 
-  \node[stack=3, 
-        every one node part/.style={fill=gray}] (B) at (4, -1) {
+  \node[stack=4,
+        every one node part/.style={fill=gray}] (B) at (4, -1.3) {
     \nodepart{one} {inputs: $ebl_0$}
     \nodepart{two} {outputs: $ebl_1$}
     \nodepart{three} {UTXO with $N$ coins}
+    \nodepart{four} {currency: Bitcoin}
   };
-  \draw (4, -2.2) node {$Tx_0$};
+  \draw (4, -2.7) node {$Tx_0$};
 
   \draw (8,0.7) node {\textbf{Balance 1}};
   \node[draw] (C) at (8,0) {$ebl_1$ with $N$ balance};
@@ -521,12 +517,21 @@ This is a payment scheme, not a cryptocurrency. There is no mining that makes mo
 
 \end{tikzpicture}
 \end{center}
-\caption{Bootstrap from Bitcoin}
+\label{bootstrap}
+\caption{Bootstrap from Bitcoin and Fiat Currency}
 \end{figure}
 
 The UTXO sends $N$ coins to the public address owned by the quorum. To convert the balance back to bitcoin, the user makes a transaction for $0$ balance so the system will make a UTXO to send the amount of the last balance to the user's address.
 This payment scheme is all about the balance. The amount of all bitcoins deposited to the public address must be exactly the same as the total balance of all the balance chain, therefore withdrawing has to be done without any shortage.
 Also, we use the distributed signing feature of {\sf bftkv} to manage the private key of the public address. The signing key is distributed to the quorum using the threshold cryptography technique and never be revealed during the signing process. See ``3.4 Distributed Signing'' \cite{bftkv}.
+
+\subsection{Stablecoins}
+As in the Figure \ref{bootstrap}, the ``currency'' field is introduced to indicate what currency is the origin of the balance. All transactions derived from the genesis balance has to inherit the currency. It is inhibited to make a transaction between balances that have different currency. This way the total assets of the same currency in the blockchain is assured to cash out. Exchanges between currencies is out of scope.
+
+The currency is encoded in the balance $bl$ such as $\textsf{currency} \times 2^d + bl$, where \textsf{currency} is encoded to a small integer like $1..127$. This way it is easy to verify all balances have been created with the same currecy, by dividing $ebl$ by $g^{\textsf{currency} \times 2^d}$.
+
+% \section{Smart Contracts and API}
+% Our system is based on Byzantine fault tolerant protocols. Unless the integrity of the program (smart contracts) is guaranteed it is difficult to guarantee the BFT property. It is easy to verify the integrity {\em statically} using the blockchain technologies but this does not guarantee that the program is really executed as-is. In this regard, The blackbox property \cite{blackbox} or indistinguishability obfuscation is too strong for the code integrity 
 
 \begin{thebibliography}{99}
 
@@ -538,6 +543,9 @@ Also, we use the distributed signing feature of {\sf bftkv} to manage the privat
 
 \bibitem{byzantinequorum}
   Malhi, D. and Reiter, M. (1998) ``Byzantine Quorum Systems''
+
+% \bibitem{blackbox}
+% Barak, B., Goldreich, O., Impagliazzo, R., Rudich, S., Sahai, A., Vadhan, S., and Yang, K. (2001) On the (Im)possibility of Obfuscating Programs.
 
 \end{thebibliography}
 
