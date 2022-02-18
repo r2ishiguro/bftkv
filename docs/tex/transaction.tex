@@ -106,6 +106,8 @@ Once a triple $\langle x, t, v \rangle$ is signed by a quorum clique, it will be
 Each legitmate node must check equivication. Malicious nodes could sign a different value for the same variable and timestamp, i.e., $\langle x, t, v \rangle$ and $\langle x, t, v' \rangle$ where $v \ne v'$. Such equivocation can be detected when it's stored in KV quorum. Another type of equivocation is to show other nodes a different view of the trust graph. To detect such attack, each node should keep its own view of the trust graph and whenever it receives the quorum certificate it checks if it's consitent with its own graph and udpates it if it finds an updated nodes in the QC.
 
 \subsection{Read / Write Protocols}
+The read / write protocols follow Phalanx \cite{phalanx} with some practical extensions. See Section 4. Protocol \cite{bftkv} for details and also we depict the protocols just for a recap in this section.
+
 The transport security is out of scope of this proposal. Without any additional security scheme the protocol has to be secure by itself. But in a real world situation we need to consider additional security measures. Imagine that you are connecting a public WiFi at a cafe and this network is totally controled by a malicious attacker. Even if the attacker cannot forge the message they can do some common attacks such as reply attack and relay attack. If we only rely on the quorum system this situation looks like a case where all nodes are faulty. To mitigate this kind of situation we add a simple challenge-response protocol with a nonce.
 
 In addition to the transport level security, we add a simple gossip among nodes in the KV quorum. Gossip is voluntary and the system does not rely on how gossip propagate the message, but this is a good way to keep the whole network sound and secure. We use gossip to extend the \textsf{write} protocol and propagate the revocation message.
@@ -543,6 +545,9 @@ The currency is encoded in the balance $bl$ such as $\textsf{currency} \times 2^
 
 \bibitem{byzantinequorum}
   Malhi, D. and Reiter, M. (1998) ``Byzantine Quorum Systems''
+
+\bibitem{phalanx}
+  Malhi, D. and Reiter, M. (1998) ``Secure and Scalable Replication in Phalanx''
 
 % \bibitem{blackbox}
 % Barak, B., Goldreich, O., Impagliazzo, R., Rudich, S., Sahai, A., Vadhan, S., and Yang, K. (2001) On the (Im)possibility of Obfuscating Programs.
