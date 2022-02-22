@@ -275,16 +275,15 @@ that satisfies:
 \]
 The Sigma protocol of PoB will look like the Figure \ref{PoB}.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \begin{center}
   \begin{tikzpicture}
-    \matrix (m) [matrix of math nodes, nodes in empty cells, row
-      sep=0cm, column sep=3cm, minimum width=4cm] {
+    \matrix (m) [matrix of math nodes, nodes in empty cells, row sep=0cm, column sep=3cm, minimum width=4cm] {
       P((\beta_{\triangle i}, bl_i', \gamma_i, \beta_i', \{b_{ij}\}), (\{u_j\}, \{c_{ij}\}, w_i)) & V(\{u_j\}, \{c_{ij}\}, w_i) \\
       \begin{minipage} {5cm} \begin{multline*}
           t_{1j}, t_2, t_{3j}, t_4, t_5 \xleftarrow{\mathcal{R}} \mathbb{Z}_q \\
           v_{1ij} = c_{ij}^{t_{1j}}, \; v_{2ij} = u_j^{t_2}, \; v_{3ij} = u_j^{-t_3j}, \\
-          v_{4i} = h^{t_4}, \; v_{5i} = h^{t_5}, v_{1i*} = \prod_j g^{t_{1j}} 2^j \\
+          v_{4i} = h^{t_4}, \; v_{5i} = h^{t_5}, v_{1i*} = \prod g^{t_{1j}} 2^j \\
       \end{multline*} \end{minipage}  & \\
                       & \\
                       & C \xleftarrow{\mathcal{R}} \mathbb{Z}_q \\
@@ -322,7 +321,7 @@ Tx := \{ebl_i, ebl_i', PoB_i \}_i \\
 $ebl_i, ebl_i'$ for some $i$ can be \textsf{nil} which is treated as $bl=0$. We use the Fiat-Shamir transform to convert the Sigma Protocol \ref{PoB} to $PoB$.
 
 The Figure \ref{payment_example} is a payment example: A and B jointly pay \$2 and \$3 to C. This transaction creates a brand new balance for C. Whatever $bl_A$ and $bl_B$ are, the total balance of A, B, and C does not change.
-\begin{figure}[H]
+\begin{figure}[h]
 \begin{center}
 \begin{tikzpicture}
   \draw (0,1) node {\textbf{Inputs}};
@@ -387,7 +386,8 @@ The payment protocol between two parties is done as the Figure \ref{payment}.
 \end{figure}
 
 $\textsf{Tx}_A$ is a transaction that has created $bl_A$. The payer subtracts the amount from the current balance ($bl_A$) and creates a new (encrypted) balance ($ebl_A'$). The payee adds the amount to the current balance ($bl_B$) and perform $PoB$ on the new balance ($bl_B'$). The payer constructs a new transaction combining the encrypted balances and PoBs of both parties, then writes it to the quorum. (See the following section for {\sf wo}.) \textsf{Tx} is verified during the protocol as the Algorithm \ref{VerifyTx}.
-\begin{algorithm}[h]
+
+\begin{algorithm}[H]
 \label{VerifyTx}
 \caption{VerifyTx}
 \KwIn{$Tx$: Transaction of $ebl$}
@@ -452,7 +452,7 @@ The key ($ebl$) / value ($Tx$) pairs form a DAG. The topological order is guaran
 
 But, what if the quorum system is corrupted or the payer is somehow able to trick the quorum? In this case his balance might have been created out of thin air. As the security analysis of \textsf{bftkv}, even if faulty nodes outnumber the threshold it is still possible to detect the equivocation and in the transaction case, it will immediately invalidate the balance and abort the transaction. But, even if the probability is low there must be some fail-safe mechanism.
 
-When an balance ($ebl$) is written to a quorum each member verifies \textsf{PoB} of the transaction that has created $ebl$, then store the hash value of the new transaction that spends $ebl$. Once \textsf{Tx} is verified it can be disposed. Since \textsf{Tx} is verified anyone who reads the variable ($ebl$) knows the value ($H(\textsf{Tx'})$) is valid without backtracking the balance to the genesis, but because of the above concern it would be good to have a way to validate it without relying on the quorum. We propose to have an archive service of \textsf{Tx} for this purpose. It is possible to keep \textsf{Tx} of all transactions in each quorum member but it can be too big and it is not necessary to keep the replication. The archive service is a simple key value store that takes $ebl$ and returns \textsf{Tx}. The client checks if $\textsf{ReadArchive}(ebl) = H(\textsf{Tx})$ and verifies each \textsf{PoB} in \textsf{Tx}.
+When an balance ($ebl$) is written to a quorum each member verifies \textsf{PoB} of the transaction that has created $ebl$, then store the hash value of the new transaction that spends $ebl$. Once \textsf{Tx} is verified it can be disposed. Since \textsf{Tx} is verified anyone who reads the variable ($ebl$) knows the value ($H(\textsf{Tx'})$) is valid without backtracking the balance to the genesis, but because of the above concern it would be good to have a way to validate it without relying on the quorum. We propose to have an archive service of \textsf{Tx} for this purpose. It is possible to keep \textsf{Tx} of all transactions in each quorum member but it can be too big and it is not necessary to keep the replication. The archive service is a simple key value store that takes $ebl$ and returns \textsf{Tx}. The client checks if the hash value of $\textsf{Tx} \leftarrow \textsf{ReadArchive}(ebl)$ is the same as the value read from the quorum and verifies each \textsf{PoB} in \textsf{Tx}.
 The audit can be done as the Algorithm \nameref{AuditAlgo}.
 
 \begin{algorithm}[h]
