@@ -34,19 +34,19 @@
 \author{%
   \textsc{Ryuji Ishiguro}\\%
 }
-\date{{\small -- Very Preliminary (ver 0.3) --}}
+\date{{\small -- Very Preliminary (ver 0.4) --}}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
 
-This is an extension of \textsf{bftkv} \cite{bftkv}. We show that our Byzantine fault-tolerant key-value store can be an efficient and scalable solution for Bitcon like trasactions. On top of that, we develop an anonymous payment scheme. In our scheme, anonymity and confidentiality are built-in, not an add-on. We use a ZKP technique not only to make the transaction confidential but also to ensure the validity of transactions, which is usually done using digital signatures. There is not any linkable information in the transaction such as ``addresses'' to be hidden in the first place. The double spending problem is reduced to the equivocation problem that is solved with \textsf{bftkv}.
+This is an extension of \textsf{bftkv} \cite{bftkv}. We show that our Byzantine fault-tolerant key-value store can be an efficient and scalable solution for Bitcon-like trasactions. On top of that, we develop an anonymous payment scheme. In our scheme, anonymity and confidentiality are built-in, not an add-on. We use a ZKP technique not only to make the transaction confidential but also to ensure the validity of transactions, which is usually done using digital signatures. There is not any linkable information in the transaction such as ``addresses'' to be hidden in the first place. The double spending problem is reduced to the equivocation problem that is solved with \textsf{bftkv}.
 
 \end{abstract}
 
 \section{Introduction}
-All transactions are stored in the global ledger in the PoW type blockchains to make PoW efficient. Even if the addresses are pseudonym it is easy to track the transactions. Also each transaction includes the amount of coins that are transferred from an address to another address so even 3rd party entities can know exactly how much coin is spent or kept by an address. This is the way to check that someone is not cheating in blockchains like Bitcoin. Even non PoW type blockchains, most of which are based on BFT state machine replication (such as PBFT \cite{pbft}), follow the same mechanism when it comes to transactions. We take an advantage of Byzantine fault-tolerant KV store. First of all, your transaction is known by only you and someone you are trading with, and it does not have to be published to all over the world. Payers and payees verify a transaction themselves and stores it in the KV store with a ``Proof of Balance''. The KV slots are ``write once'' so any other transactions cannot overwrite it. This feature of \textsf{bftkv} can be equivalent to the global ledger but unlike PoW or state machine replication it does not require absolute constency among participants. This makes it easy to scale the system. 
+All transactions are stored in the global ledger in the PoW type blockchains to make PoW efficient. Even if the addresses are pseudonym it is easy to track the transactions. Also each transaction includes the amount of coins that are transferred from an address to another so even 3rd party entities can know exactly how much coin is spent or kept by an address. This is the way to check that someone is not cheating in blockchains like Bitcoin. Even non PoW type blockchains, most of which are based on BFT state machine replication (such as PBFT \cite{pbft}), follow the same mechanism when it comes to transactions. We take an advantage of Byzantine fault-tolerant KV store. First of all, your transaction is known by only you and someone you are trading with, and it does not have to be published to all over the world. Payers and payees verify a transaction themselves and stores it in the KV store with a ``Proof of Balance''. The KV slots are ``write once'' so any other transactions cannot overwrite it. This feature of \textsf{bftkv} can be equivalent to the global ledger but unlike PoW or state machine replication it does not require absolute constency among participants. This makes it easy to scale the system. 
 
 As above, we introduce a new consensus mechanism called Proof of Balance or PoB to add transactions to the global ledger (which is, in our case, the KV store). Once a pair of key (balance) - value (transaction) is verified (with PoB), accepted (with the quorum) and stored in the leger (KV store), we consider the system reaches a consensus on the validity of the transaction with the balance. We use a Zero Knowledge Proof technique to construct PoB. This scheme does not require any long term key such as signing keys and the transaction does not include any linkable information such as signatures or public keys. We discuss anonymity later. The balance is encrypted and never decrypted in any way. All we have to consider is the total balance before and after a transaction. We do not have to know the actual balance of others. ZKP makes it possible to calculate the balance on encrypted data. 
 
@@ -135,7 +135,7 @@ The write operation is done among the client, Quorum Clique and KV quorum.
   }
 
   \draw (-1.5,-2.5) node {\textsf{get signature}$\langle x, t, v \rangle$};
-  \draw (-1,-4) node {$S = \{S_i\}_{i \in QC}$};
+  \draw (-1,-4) node {$S = \{\sigma_i\}_{i \in QC}$};
 
   \node[shape=circle,scale=1.5] (A) at (0,-2.5) {};
   \node[shape=circle,scale=1.5] (B) at (0,-4) {};
@@ -143,7 +143,7 @@ The write operation is done among the client, Quorum Clique and KV quorum.
     \node[scale=1.5] (C) at (3,\to) {};
     \draw[->] (A) -- (C);
     \draw[->] (C) -- (B);
-    \draw (4,\to) node {\textsf{$S_\i$}};
+    \draw (4,\to) node {\textsf{$\sigma_\i$}};
   }
 
   \draw (-1.5,-5.5) node {\textsf{write}$\langle x, t, v, S, QC \rangle$};
@@ -162,9 +162,9 @@ The write operation is done among the client, Quorum Clique and KV quorum.
 \end{figure}
 
 Each member of KV quorum does the equivocation check. If the check fails it will propagate a revocation message instead of the signed triple to other members. 
-The system does not provide absolute or eventual consistency unlike state machine replication. The communication complexity is $\bigO{N}$ or $\bigsmallO{|Q|}$ at the time of read / write. The system asynchronously gossips the signed triple and revocation state. The client does not wait for the reply from the quorum members to conclude a transaction. See the risk analysis. This way we can scale the system without increasing communication complexity beyond the limitation of the quorum threadhold.
+The system does not provide absolute or eventual consistency unlike state machine replication. The communication complexity is $\bigsmallO{|Q|}$ at the time of read / write. The system asynchronously gossips the signed triple and revocation state. The client does not wait for the reply from the quorum members to conclude a transaction. See the risk analysis. This way we can scale the system without increasing communication complexity beyond the limitation of the quorum threadhold.
 
-Each member of Quorum Clique checks if $\langle x, t \rangle$ has been already used to sign. If a client makes such a request that is attempting to make a equivocation the client will be revoked, though this kind of malicious action is too obvious.  Typical ``malicious'' actions will be found by KV quorum (5. Security Analysis \cite{bftkv}). 
+Each member of Quorum Clique checks if $\langle x, t \rangle$ has been already used to sign. If a client makes such a request that is attempting to make an equivocation the client will be revoked, though this kind of malicious action is too obvious.  More typical malicious actions will be found by KV quorum (5. Security Analysis \cite{bftkv}). 
 
 \subsubsection*{Read}
 The read operation is done between the client and KV quorum.
@@ -254,28 +254,24 @@ The quorum system is used to prevent double spending. Specifically we use the ``
 \subsection{Zero Knowledge Proof of Balance (zkPoB)}
 As above, each entity does not have to know the balance of other parties. They only need to know that the total balance has not changed before and after a transaction.  We use a ZKP technique to calculate the total balance without letting others know the actual value. Also we need to make sure that each balance is in a certain range so that a negative balance is detected. Putting them together the relation can be:
 
-\[
-\begin{split}
-\mathcal{R} := \{& ((bl_i, bl_i', \beta_i, \beta_i'), (u, e_i, e_i')) : \\
-& e_i = u^{\beta_i}g^{bl_i}, e_i' = u^{\beta_i'}g^{bl_i'}, 0 \le bl_i' < 2^d, \text{ and } \sum_i bl_i = \sum_i bl_i' \}.
-\end{split}
-\]
-With this relation, we have:
-\[
-\begin{split}
-(u, e_i, e_i') \in L_{\mathcal{R}} \Longleftrightarrow & \; \prod_i e_i / \prod_i e_i' = \prod_i u^{\beta_i} u^{-\beta_i'} = \prod_i u^{\beta_{\triangle
-      i}}, \\ & \text{where } \beta_{\triangle i} = \beta_i - \beta_i',
-\end{split}
-\]
-if and only if $\sum_i bl_i = \sum_i bl_i'$. Therefore all we need to
-do is to run a sigma protocol to prove that each party has
-$\beta_{\triangle i}$, i.e.,
-\[
-\mathcal{R}' := \{ ((\beta_{\triangle i}, bl_i', \gamma_i), (u, w_i, b_{ij}, c_{ij})) : w_i = u^{\beta_{\triangle i}}, c_{ij} = u^{\gamma_i} g^{b_{ij}} \}
-\]
+\[ \begin{split}
+\mathcal{R} := \{& ((bl_i, bl_i', \beta_i, \beta_i'), (ebl_i, ebl_i')) : \\
+& ebl_i = h^{\beta_i}g^{bl_i}, ebl_i' = h^{\beta_i'}g^{bl_i'}, 0 \le bl_i' < 2^d, \text{ and } \sum_i bl_i = \sum_i bl_i' \}.
+\end{split} \]
+$g, h$ are generators in $\mathbb{Z}_q$. With this relation, we have:
+
+\[ \begin{split}
+(ebl_i, ebl_i') \in L_{\mathcal{R}} \Longleftrightarrow & \; \prod_i ebl_i / \prod_i ebl_i' = \prod_i h^{\beta_i} h^{-\beta_i'} = \prod_i h^{\beta_{\triangle i}}, \\ 
+  & \text{where } \beta_{\triangle i} = \beta_i - \beta_i',
+\end{split} \]
+if and only if $\sum_i bl_i = \sum_i bl_i'$. Therefore all we need to do is to run a sigma protocol to prove that each party has $\beta_{\triangle i}$, i.e.,
+\[ \begin{split}
+\mathcal{R}' := \{ ((\beta_{\triangle i}, bl_i', \gamma_i), (u_j, w_i, b_{ij}, c_{ij})) : w_i = h^{\beta_{\triangle i}}, c_{ij} = u_j^{\gamma_i} g^{b_{ij}} \}, \\
+\text{where } u_j = g^{\alpha_j}, \alpha_j \xleftarrow{\mathcal{R}} \mathbb{Z}_q,
+\end{split} \]
 that satisfies:
 \[
-(\prod_i e_i / \prod_i e_i' = \prod_i w_i) \wedge (bl_i' = \sum_{j = 0..d-1} 2^{j} b_{ij}).
+(\prod_i ebl_i / \prod_i ebl_i' = \prod_i w_i) \wedge (bl_i' = \sum_{j = 0..d-1} 2^{j} b_{ij}).
 \]
 The Sigma protocol of PoB will look like the Figure \ref{PoB}.
 
@@ -284,11 +280,11 @@ The Sigma protocol of PoB will look like the Figure \ref{PoB}.
   \begin{tikzpicture}
     \matrix (m) [matrix of math nodes, nodes in empty cells, row
       sep=0cm, column sep=3cm, minimum width=4cm] {
-      P((\beta_{\triangle i}, bl_i', \gamma_i, \beta_i', \{b_{ij}\}), (u, \{c_{ij}\}, w_i)) & V(u, \{c_{ij}\}, w_i) \\
+      P((\beta_{\triangle i}, bl_i', \gamma_i, \beta_i', \{b_{ij}\}), (\{u_j\}, \{c_{ij}\}, w_i)) & V(\{u_j\}, \{c_{ij}\}, w_i) \\
       \begin{minipage} {5cm} \begin{multline*}
           t_{1j}, t_2, t_{3j}, t_4, t_5 \xleftarrow{\mathcal{R}} \mathbb{Z}_q \\
-          v_{1ij} = c_{ij}^{t_{1j}}, \; v_{2i} = u^{t_2}, \; v_{3ij} = u^{-t_3j}, \\
-          v_{4i} = u^{t_4}, \; v_{5i} = u^{t_5}, v_{1i*} = \prod_j g^{t_{1j}} 2^j \\
+          v_{1ij} = c_{ij}^{t_{1j}}, \; v_{2ij} = u_j^{t_2}, \; v_{3ij} = u_j^{-t_3j}, \\
+          v_{4i} = h^{t_4}, \; v_{5i} = h^{t_5}, v_{1i*} = \prod_j g^{t_{1j}} 2^j \\
       \end{multline*} \end{minipage}  & \\
                       & \\
                       & C \xleftarrow{\mathcal{R}} \mathbb{Z}_q \\
@@ -300,14 +296,14 @@ The Sigma protocol of PoB will look like the Figure \ref{PoB}.
       \end{multline*} \end{minipage}  & \\
                       & \\
                       & \begin{minipage}{5cm} \begin{multline*}
-                            c_{ij}^{z_{1ij}} u^{z_{2i}} u^{-z_{3ij}} \overset{?}{=} v_{1ij} v_{2i} v_{3ij} c_{ij}^C \\
-                            (\prod_j g^{z_{1ij} 2^j}) u^{z_{4i}} \overset{?}{=} v_{1i*} v_{4i} e_i^{'C} \\
-                            u^{z_{5i}} \overset{?}{=} v_{5i} w_i^C \\
+                            c_{ij}^{z_{1ij}} u_j^{z_{2i}} u_j^{-z_{3ij}} \overset{?}{=} v_{1ij} v_{2ij} v_{3ij} c_{ij}^C \\
+                            (\prod_j g^{z_{1ij} 2^j}) h^{z_{4i}} \overset{?}{=} v_{1i*} v_{4i} ebl_i^{'C} \\
+                            h^{z_{5i}} \overset{?}{=} v_{5i} w_i^C \\
                         \end{multline*} \end{minipage} \\
     };
 
     \draw [-, transform canvas={yshift=0.5cm}] (m-1-1.west) -- (m-1-2.east) node [very near start, above] {};
-    \draw [->] (m-3-1) -- (m-3-2) node [midway, above] {$\{v_{1ij}\}, v_{2i}, \{v_{3ij}\}, v_{4i}, v_{5i}, v_{1i*}$};
+    \draw [->] (m-3-1) -- (m-3-2) node [midway, above] {$\{v_{1ij}\}, \{v_{2ij}\}, \{v_{3ij}\}, v_{4i}, v_{5i}, v_{1i*}$};
     \draw [<-] (m-5-1) -- (m-5-2) node [midway, above] {$C$};
     \draw [->] (m-7-1) -- (m-7-2) node [midway, above] {$\{z_{1ij}\}, z_{2i}, \{z_{3ij}\}, z_{4i}, z_{5i}$};
   \end{tikzpicture}
@@ -315,12 +311,12 @@ The Sigma protocol of PoB will look like the Figure \ref{PoB}.
 \label{PoB}
 \end{center}
 \end{figure}
-After finishing the protocol with all parties, check if $\prod_i e_i / \prod_i e_i' \overset{?}{=} \prod_i w_i$.
+After finishing the protocol with all parties, check if $\prod_i ebl_i / \prod_i ebl_i' \overset{?}{=} \prod_i w_i$.
 
 \subsection{Payment Protocols}
 We define the transaction as follows:
 \begin{multline*}
-PoB_i := ((u, \{c_{ij}\}_j, w_i), (\{v_{1ij}\}_j, v_{2i}, \{v_{3ij}\}_j, v_{4i}, v_{5i}, \{z_{1ij}\}_j, z_{2i}, \{z_{3ij}\}_j, z_{4i}, z_{5i})) \; (j = 0..d-1) \\
+PoB_i := ((\{u_j\}_j, \{c_{ij}\}_j, w_i), (\{v_{1ij}\}_j, \{v_{2ij}\}_j, \{v_{3ij}\}_j, v_{4i}, v_{5i}, \{z_{1ij}\}_j, z_{2i}, \{z_{3ij}\}_j, z_{4i}, z_{5i})) \; (j = 0..d-1) \\
 Tx := \{ebl_i, ebl_i', PoB_i \}_i \\
 \end{multline*}
 $ebl_i, ebl_i'$ for some $i$ can be \textsf{nil} which is treated as $bl=0$. We use the Fiat-Shamir transform to convert the Sigma Protocol \ref{PoB} to $PoB$.
@@ -360,13 +356,13 @@ The payment protocol between two parties is done as the Figure \ref{payment}.
       \textbf{Payer (A)} & \textbf{Payee (B)} \\
       \begin{minipage} {5cm}
         $bl_A' = bl_A - \textsf{amount}$ \\
-        $ebl_A' = u^{\beta_A'} g^{bl_A'}$
+        $ebl_A' = h^{\beta_A'} g^{bl_A'}$
       \end{minipage}  & \\
                       & \\
                       & \begin{minipage} {4cm}
                           VerifyTx($\textsf{Tx}_A$) \\
                           $bl_B' = bl_B + \textsf{amount}$ \\
-                          $ebl_B' = u^{\beta_B'} g^{bl_B'}$ \\
+                          $ebl_B' = h^{\beta_B'} g^{bl_B'}$ \\
                           $\textsf{PoB}_B \leftarrow \text{ perform } PoB$ \\
                         \end{minipage} \\
                      & \\
@@ -408,7 +404,7 @@ $\textsf{Tx}_A$ is a transaction that has created $bl_A$. The payer subtracts th
       \Return{false}
     }
   }
-  \Return {$(\prod_i PoB_i.e) / (\prod_i PoB_i.e') \overset{?}{=} \prod_i PoB_i.w$}
+  \Return {$(\prod_i PoB_i.ebl) / (\prod_i PoB_i.ebl') \overset{?}{=} \prod_i PoB_i.w$}
 }
 \end{algorithm}
 
@@ -479,7 +475,7 @@ The audit can be done as the Algorithm \nameref{AuditAlgo}.
       \Return{false}
     }
   }
-  \Return {$(\prod_i PoB_i.e) / (\prod_i PoB_i.e') \overset{?}{=} \prod_i PoB_i.w$}
+  \Return {$(\prod_i PoB_i.ebl) / (\prod_i PoB_i.ebl') \overset{?}{=} \prod_i PoB_i.w$}
 }
 \end{algorithm}
 
@@ -527,8 +523,8 @@ The UTXO sends $N$ coins to the public address owned by the quorum. To convert t
 This payment scheme is all about the balance. The amount of all bitcoins deposited to the public address must be exactly the same as the total balance of all the balance chain, therefore withdrawing has to be done without any shortage.
 Also, we use the distributed signing feature of {\sf bftkv} to manage the private key of the public address. The signing key is distributed to the quorum using the threshold cryptography technique and never be revealed during the signing process. See ``3.4 Distributed Signing'' \cite{bftkv}.
 
-\subsection{Stablecoins}
-As in the Figure \ref{bootstrap}, the ``currency'' field is introduced to indicate what currency is the origin of the balance. All transactions derived from the genesis balance has to inherit the currency. It is inhibited to make a transaction between balances that have different currency. This way the total assets of the same currency in the blockchain is assured to cash out. Exchanges between currencies is out of scope.
+\subsection{Currency}
+As in the Figure \ref{bootstrap}, the ``currency'' field is introduced to indicate what currency is the origin of the balance. The unit of balance depends on the currency. $bl=1$ in USD will not be the same as $bl=1$ in Bitcoin. All transactions derived from the genesis balance has to inherit the currency. It is inhibited to make a transaction between balances that have different currency. This way the total balance of the same currency in the blockchain is assured to cash out without changing the value. Exchanges between currencies is out of scope of this scheme.
 
 The currency is encoded in the balance $bl$ such as $\textsf{currency} \times 2^d + bl$, where \textsf{currency} is encoded to a small integer like $1..127$. This way it is easy to verify all balances have been created with the same currecy, by dividing $ebl$ by $g^{\textsf{currency} \times 2^d}$.
 
